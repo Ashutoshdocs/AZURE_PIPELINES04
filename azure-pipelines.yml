@@ -6,12 +6,22 @@ pool:
 
 steps:
 
-- task: TerraformInstaller@1
-  inputs:
-    terraformVersion: 'latest'
+- checkout: self
 
 - task: AzureCLI@2
-  displayName: 'Terraform Init'
+  displayName: Install Terraform
+  inputs:
+    azureSubscription: 'Azure-Service-Connection'
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      wget https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
+      unzip terraform_1.9.8_linux_amd64.zip
+      sudo mv terraform /usr/local/bin/
+      terraform version
+
+- task: AzureCLI@2
+  displayName: Terraform Init
   inputs:
     azureSubscription: 'Azure-Service-Connection'
     scriptType: bash
@@ -20,7 +30,7 @@ steps:
       terraform init
 
 - task: AzureCLI@2
-  displayName: 'Terraform Validate'
+  displayName: Terraform Validate
   inputs:
     azureSubscription: 'Azure-Service-Connection'
     scriptType: bash
@@ -29,7 +39,7 @@ steps:
       terraform validate
 
 - task: AzureCLI@2
-  displayName: 'Terraform Plan'
+  displayName: Terraform Plan
   inputs:
     azureSubscription: 'Azure-Service-Connection'
     scriptType: bash
