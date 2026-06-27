@@ -1,5 +1,17 @@
-trigger:
-- main
+trigger: none
+
+pr: none
+
+parameters:
+
+- name: terraformAction
+  displayName: "Terraform Action"
+  type: string
+  default: plan
+
+  values:
+  - plan
+  - apply
 
 pool:
   vmImage: ubuntu-latest
@@ -8,6 +20,7 @@ steps:
 
 - checkout: self
 
+# Install Terraform
 - task: AzureCLI@2
   displayName: Install Terraform
   inputs:
@@ -16,10 +29,11 @@ steps:
     scriptLocation: inlineScript
     inlineScript: |
       wget https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
-      unzip terraform_1.9.8_linux_amd64.zip
+      unzip -o terraform_1.9.8_linux_amd64.zip
       sudo mv terraform /usr/local/bin/
       terraform version
 
+# Init
 - task: AzureCLI@2
   displayName: Terraform Init
   inputs:
@@ -29,6 +43,7 @@ steps:
     inlineScript: |
       terraform init
 
+# Validate
 - task: AzureCLI@2
   displayName: Terraform Validate
   inputs:
@@ -38,11 +53,24 @@ steps:
     inlineScript: |
       terraform validate
 
+# PLAN
 - task: AzureCLI@2
   displayName: Terraform Plan
+  condition: eq('${{ parameters.terraformAction }}','plan')
   inputs:
     azureSubscription: 'Azure-Service-Connection'
     scriptType: bash
     scriptLocation: inlineScript
     inlineScript: |
       terraform plan
+
+# APPLY
+- task: AzureCLI@2
+  displayName: Terraform Apply
+  condition: eq('${{ parameters.terraformAction }}','apply')
+  inputs:
+    azureSubscription: 'Azure-Service-Connection'
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      terraform apply -auto-approve
